@@ -17,7 +17,8 @@ namespace Security
         //public static Dictionary<char, List<char>> dividedCipher = new Dictionary<char, List<char>>();
 
         public static List<List<char>> dividedCipher;
-                
+
+        public static Dictionary<char, double> _chiSquare = new Dictionary<char, double>();
         //public static string cipherWord = "aabbaabbbaa";
         public static string cipherWord = "ELFMASBQDXISZMNMHIBFEFQIMEUVNGLML" +
     "RETHAZAQPPDOTEGDEDONLYVZJNWHCKBLPPQWDQZZGFFUKD" +
@@ -92,18 +93,14 @@ namespace Security
             //sorting dictionary.
             var sortedDic = from entry in charGCD orderby entry.Value ascending select entry;
 
-            //foreach (var kvp in sortedDic)
-            //{
-            //    Console.WriteLine("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
-            //}
-
             //==================================FINDING KEY LENGTH END=============================================
 
             DivideCipher(cipherWord, 8);
 
-            calculateFrequency();
+            ChiSquareTest();
 
-            Console.WriteLine(calculatedFrequency.ToString());
+          
+
 
         }
 
@@ -122,8 +119,9 @@ namespace Security
             }
         }
 
-        public static void calculateFrequency()
+        public static void ChiSquareTest()
         {
+
             double frequencySum = 0;
 
             int ascii = 0;
@@ -132,30 +130,82 @@ namespace Security
 
             char convertedChar = ' ';
 
-            for(int i=0; i<dividedCipher.Count; i++)
-            {
+            char observedCount = ' ';
+
+            int colLength = 0;
+
+            double expectedCount = 0;
+
+            double xSquare = 0;
+
+            Dictionary<char, double> temp = new Dictionary<char, double>();
+
+
+            //dividedCipher = divided by key length list.
+            for (int i=0; i<dividedCipher.Count; i++)
+            {   //apply all of alphabets
                 for (int k = 0; k < 26; k++)
-                {
+                {   //check through all lists
                     for (int j = 0; j < dividedCipher[i].Count; j++)
                     {
+                        //convert character to ascii
                         ascii = (int)dividedCipher[i][j];
-
+                        //apply the convert number
                         convertedAscii = ascii + k;
-
-                        Console.WriteLine(convertedAscii);
-
-                        if(convertedAscii> 132)
+                        
+                        //if ascii is over the range
+                        if(convertedAscii> 90)
                         {
-                            convertedAscii = convertedAscii - 132 + 101;
+                            convertedAscii = convertedAscii - 26;
+                        }
+                        else
+                        {
+                            convertedChar = (char)convertedAscii;
                         }
 
-                        convertedChar = (char)convertedAscii;
+                        if (!_chiSquare.ContainsKey(convertedChar))
+                        {
+                            _chiSquare.Add(convertedChar, 1);
+                        }
+                        else
+                        {
+                            _chiSquare[convertedChar]++;
+                        }
 
-                        frequencySum += frequency[convertedChar.ToString()];
+
+                    }//check through all lists end
+
+
+                    //calcualte the xSquare and sum all of them
+                    foreach (var kvp in _chiSquare)
+                    {
+                        expectedCount = frequency[kvp.Key.ToString()] * _chiSquare.Sum(x => x.Value);
+                        //Console.WriteLine(kvp.Key + "     " + kvp.Value + "      " + _chiSquare.Sum(x => x.Value));
+                        xSquare += Math.Pow(kvp.Value - expectedCount,2) / expectedCount;
+                        //Console.WriteLine(xSquare);
                     }
+
+                    temp.Add((char)(k + 65), xSquare);
+
+                    //reset
+                    xSquare = 0;
+                    _chiSquare.Clear();
+
+                    
+                }//applying alphabets are done.
+                 //at this point, _chiSquare contains the number of characters.
+
+                var sortedDict = from entry in temp orderby entry.Value ascending select entry;
+
+                foreach (var kvp in sortedDict)
+                {
+                    Console.WriteLine(kvp.Key + "     " + kvp.Value);
                 }
-                calculatedFrequency[i] = frequencySum;
-                frequencySum = 0;
+                Console.WriteLine("============================================================================");
+
+                temp.Clear();
+
+
             }
         }
 
