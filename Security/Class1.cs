@@ -43,8 +43,42 @@ namespace Security
     "WSNKKBTSOGDSVNHEZHDJYCRLQWLWCQYFVHEKZZZQQHHQDWWHZCQSBM" +
     "ZYUCBQYCCIMSIWXBMCXOHLOZ";
 
-        public static void Main(string[] args)
+        public static Dictionary<string, double> frequency = new Dictionary<string, double>
         {
+            { "A", 0.08167 },
+            {"B", .01492 },
+            {"C", .02782},
+            {"D", .04253},
+            {"E", .12702},
+            {"F", .02228},
+            {"G", .02015},
+            {"H", .06094},
+            {"I", .06966},
+            {"J", .00153},
+            {"K", .00772},
+            {"L", .04025},
+            {"M", .02406},
+            {"N", .06749},
+            {"O", .07507},
+            {"P", .01929},
+            {"Q", .00095},
+            {"R", .05987},
+            {"S", .06327},
+            {"T", .09056},
+            {"U", .02758},
+            {"V", .00978},
+            {"W", .02360},
+            {"X", .00150},
+            {"Y", .01974},
+            { "Z", .00074}
+        };
+
+        public static List<double> calculatedFrequency = new List<double>();
+
+
+    public static void Main(string[] args)
+        {
+            
 
             Kasiski(cipherWord);
 
@@ -67,22 +101,61 @@ namespace Security
 
             DivideCipher(cipherWord, 8);
 
-            Console.WriteLine();
+            calculateFrequency();
+
+            Console.WriteLine(calculatedFrequency.ToString());
 
         }
 
         public static void DivideCipher(string cipherWord, int keyLength)
         {
             dividedCipher = new List<List<char>>(keyLength);
-
+            //initialize
             for(int j=0; j<keyLength; j++)
             {
                 dividedCipher.Add(new List<char>());
             }
-
+            //divide 
             for (int i=0; i<cipherWord.Length; i++)
             {
                 dividedCipher[i%keyLength].Add(cipherWord[i]);
+            }
+        }
+
+        public static void calculateFrequency()
+        {
+            double frequencySum = 0;
+
+            int ascii = 0;
+
+            int convertedAscii = 0;
+
+            char convertedChar = ' ';
+
+            for(int i=0; i<dividedCipher.Count; i++)
+            {
+                for (int k = 0; k < 26; k++)
+                {
+                    for (int j = 0; j < dividedCipher[i].Count; j++)
+                    {
+                        ascii = (int)dividedCipher[i][j];
+
+                        convertedAscii = ascii + k;
+
+                        Console.WriteLine(convertedAscii);
+
+                        if(convertedAscii> 132)
+                        {
+                            convertedAscii = convertedAscii - 132 + 101;
+                        }
+
+                        convertedChar = (char)convertedAscii;
+
+                        frequencySum += frequency[convertedChar.ToString()];
+                    }
+                }
+                calculatedFrequency[i] = frequencySum;
+                frequencySum = 0;
             }
         }
 
