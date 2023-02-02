@@ -10,6 +10,15 @@ namespace Security
 {
     internal class Class1
     {
+        public static int prevIndex = 0;
+
+        public static Dictionary<string, int> charGCD = new Dictionary<string, int>(26);
+
+        //public static Dictionary<char, List<char>> dividedCipher = new Dictionary<char, List<char>>();
+
+        public static List<List<char>> dividedCipher;
+                
+        //public static string cipherWord = "aabbaabbbaa";
         public static string cipherWord = "ELFMASBQDXISZMNMHIBFEFQIMEUVNGLML" +
     "RETHAZAQPPDOTEGDEDONLYVZJNWHCKBLPPQWDQZZGFFUKD" +
     "WCIXWPZKKSIDYBGBATBUMOWFMYGFBPKYVELFHRHBMDMESJL" +
@@ -37,61 +46,44 @@ namespace Security
         public static void Main(string[] args)
         {
 
-
-            //string cipher = "AAABBC";
-
-            Dictionary<char, int> countCharacter = new Dictionary<char, int>(26);
-
-            List<int> list = new List<int>(new int[26]);
-
-            int colValue = 0;
-
             Kasiski(cipherWord);
 
-            //for (int i=0; i<cipher.Length; i++)
+            foreach(var val in charGCD)
+            {
+                if (val.Value < 3 || val.Key.Length <3)
+                {
+                    charGCD.Remove(val.Key);
+                }
+            }
+            //sorting dictionary.
+            var sortedDic = from entry in charGCD orderby entry.Value ascending select entry;
+
+            //foreach (var kvp in sortedDic)
             //{
-            //    colValue = char.ToUpper(cipher[i]) - 65;
-
-            //    //if (countCharacter.ContainsKey(cipher[i])) {
-            //    //    countCharacter[cipher[i]]++;
-            //    //}
-            //    //else
-            //    //{
-            //    //    countCharacter[cipher[i]] = colValue;
-            //    //}
-
-            //    if (list[colValue] == null)
-            //    {
-            //        list[colValue] = 0;
-            //    }
-
-            //    list[colValue]++;
-
+            //    Console.WriteLine("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
             //}
 
-            //int number = 0;
+            //==================================FINDING KEY LENGTH END=============================================
 
-            //for(int i = 0; i < cipher.Length; i++)
-            //{
-            //    if (!countCharacter.ContainsKey(cipher[i])) {
-            //        countCharacter[cipher[i]] = 1;
-            //    }
-            //    else
-            //    {
-            //        countCharacter[cipher[i]]++;
-            //    }
+            DivideCipher(cipherWord, 8);
 
-            //}
+            Console.WriteLine();
 
+        }
 
-            //var sortedDict = from entry in countCharacter orderby entry.Value descending select entry;
+        public static void DivideCipher(string cipherWord, int keyLength)
+        {
+            dividedCipher = new List<List<char>>(keyLength);
 
+            for(int j=0; j<keyLength; j++)
+            {
+                dividedCipher.Add(new List<char>());
+            }
 
-            //foreach(KeyValuePair<char, int> entry in sortedDict)
-            //{
-            //    Console.WriteLine(entry);
-            //}
-
+            for (int i=0; i<cipherWord.Length; i++)
+            {
+                dividedCipher[i%keyLength].Add(cipherWord[i]);
+            }
         }
 
         public static void Kasiski(string cipher)
@@ -101,7 +93,6 @@ namespace Security
 
             bool flag = false; 
 
-            int startingIdx = 0;
 
             for (int k = 0; k < cipher.Length; k++)
             {
@@ -116,7 +107,7 @@ namespace Security
 
                         if (FindIndex(cipherWord, searchWord.ToString()))
                         {
-                            Console.WriteLine(FindIndex(cipherWord, searchWord.ToString()));
+
                         }
                         else
                         {
@@ -138,16 +129,55 @@ namespace Security
         public static bool FindIndex(string str1, string str2)
         {
             bool flag = false;
+            //set up as first index.
+            int prevIndex = str1.IndexOf(str2);
 
-            for(int i=str1.IndexOf(str2)+1; i<str1.Length - str2.Length +1; i++)
+            for(int i=str1.IndexOf(str2)+1; i< str1.Length - str2.Length +1; i++)
             {
+                //if there's same word in chiper.
                 if(str1.Substring(i, str2.Length).Equals(str2))
-                {
+                {                    
+                    //set up flag as true.
                     flag = true;
-                    Console.WriteLine(str2 + " at " + i);
+
+                    // it's gonna be starting point.
+                    if (!charGCD.ContainsKey(str2))
+                    {
+                        charGCD[str2] = -1;
+                    }
+                    else
+                    { 
+                        //Console.WriteLine("current word = " + str2 + "     current index = " + i + " prevIndex = " + prevIndex);
+                        
+                        charGCD[str2] = FindGCD(charGCD[str2], i-prevIndex);          
+
+                    }
+
+                    prevIndex = i;
+
                 }
+
             }
             return flag;
+        }
+
+        public static int FindGCD(int a, int b)
+        {
+            if (a > 0)
+            {
+                while (a != 0 && b != 0)
+                {
+                    if (a > b)
+                        a %= b;
+                    else
+                        b %= a;
+                }
+                return a == 0 ? b : a;
+            }
+            else
+            {
+                return b;
+            }
         }
 
     }
