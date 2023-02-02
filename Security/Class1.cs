@@ -47,31 +47,31 @@ namespace Security
         public static Dictionary<string, double> frequency = new Dictionary<string, double>
         {
             { "A", 0.08167 },
-            {"B", .01492 },
-            {"C", .02782},
-            {"D", .04253},
-            {"E", .12702},
-            {"F", .02228},
-            {"G", .02015},
-            {"H", .06094},
-            {"I", .06966},
-            {"J", .00153},
-            {"K", .00772},
-            {"L", .04025},
-            {"M", .02406},
-            {"N", .06749},
-            {"O", .07507},
-            {"P", .01929},
-            {"Q", .00095},
-            {"R", .05987},
-            {"S", .06327},
-            {"T", .09056},
-            {"U", .02758},
-            {"V", .00978},
-            {"W", .02360},
-            {"X", .00150},
-            {"Y", .01974},
-            { "Z", .00074}
+            {"B", 0.01492 },
+            {"C", 0.02782},
+            {"D", 0.04253},
+            {"E", 0.12702},
+            {"F", 0.02228},
+            {"G", 0.02015},
+            {"H", 0.06094},
+            {"I", 0.06966},
+            {"J", 0.00153},
+            {"K", 0.00772},
+            {"L", 0.04025},
+            {"M", 0.02406},
+            {"N", 0.06749},
+            {"O", 0.07507},
+            {"P", 0.01929},
+            {"Q", 0.00095},
+            {"R", 0.05987},
+            {"S", 0.06327},
+            {"T", 0.09056},
+            {"U", 0.02758},
+            {"V", 0.00978},
+            {"W", 0.02360},
+            {"X", 0.00150},
+            {"Y", 0.01974},
+            { "Z", 0.00074}
         };
 
         public static List<double> calculatedFrequency = new List<double>();
@@ -97,9 +97,23 @@ namespace Security
 
             DivideCipher(cipherWord, 8);
 
+            //check if divided is correct or not.
+            //for(int i=0; i<dividedCipher.Count; i++)
+            //{
+            //    foreach (char c in dividedCipher[i])
+            //    {
+            //        Console.Write(c + " ");
+            //    }
+            //    Console.WriteLine();
+            //    Console.WriteLine();
+            //}
+
+
+
+
             ChiSquareTest();
 
-          
+
 
 
         }
@@ -151,17 +165,20 @@ namespace Security
                         //convert character to ascii
                         ascii = (int)dividedCipher[i][j];
                         //apply the convert number
+                        //Console.Write("previous alphabet = " + dividedCipher[i][j] + " ASCII code is " + ascii + " applied converted = " );
                         convertedAscii = ascii + k;
-                        
+                        //Console.WriteLine(convertedAscii);
                         //if ascii is over the range
-                        if(convertedAscii> 90)
+                        if (convertedAscii> 90)
                         {
-                            convertedAscii = convertedAscii - 26;
+                            convertedAscii -= 26;
                         }
-                        else
-                        {
+                        
                             convertedChar = (char)convertedAscii;
-                        }
+                        
+                        //Console.WriteLine(" converted alphabet = " + convertedChar + " converted  ASCII code is " + convertedAscii);
+
+                        //Console.WriteLine("==========================================================");
 
                         if (!_chiSquare.ContainsKey(convertedChar))
                         {
@@ -180,10 +197,15 @@ namespace Security
                     foreach (var kvp in _chiSquare)
                     {
                         expectedCount = frequency[kvp.Key.ToString()] * _chiSquare.Sum(x => x.Value);
-                        //Console.WriteLine(kvp.Key + "     " + kvp.Value + "      " + _chiSquare.Sum(x => x.Value));
+                        Console.WriteLine(kvp.Key + "     " + kvp.Value + "      " + _chiSquare.Sum(x => x.Value) + "   frequency = " + frequency[kvp.Key.ToString()]);
+                        //Console.WriteLine("expectred Count = " + expectedCount + " xSquare is " + Math.Pow(kvp.Value - expectedCount, 2) / expectedCount);
+
                         xSquare += Math.Pow(kvp.Value - expectedCount,2) / expectedCount;
                         //Console.WriteLine(xSquare);
                     }
+
+                    Console.WriteLine("Alphabet = " + (char)(k + 65)+ " Final xSquare calculated value =  " + xSquare);
+                    Console.WriteLine("=========================================");
 
                     temp.Add((char)(k + 65), xSquare);
 
