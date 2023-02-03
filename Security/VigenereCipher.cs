@@ -1,14 +1,16 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Security
 {
-    internal class Class1
+    internal class VigenereCipher
     {
         public static int prevIndex = 0;
 
@@ -79,7 +81,9 @@ namespace Security
 
     public static void Main(string[] args)
         {
-            
+
+            //==================================FINDING KEY LENGTH =============================================
+
 
             Kasiski(cipherWord);
 
@@ -92,31 +96,76 @@ namespace Security
             }
             //sorting dictionary.
             var sortedDic = from entry in charGCD orderby entry.Value ascending select entry;
+            // find the most common value in charGCD which is length of the key.
+            var possibleLength = charGCD.Values.GroupBy(x => x)
+                                 .OrderByDescending(x => x.Count())
+                                 .SelectMany(x => x)
+                                 .First();
+            // find the longest 
+            var longest = charGCD.OrderByDescending(s => s.Key.Length).First();
 
-            //==================================FINDING KEY LENGTH END=============================================
+            if (possibleLength.Equals(longest.Key.Length))
+            {
+                Console.WriteLine(possibleLength + " is most proper key length try it ");
+            }
 
-            DivideCipher(cipherWord, 8);
+            //==================================FINDING KEY by Chi-square test====================================
 
-            //check if divided is correct or not.
-            //for(int i=0; i<dividedCipher.Count; i++)
-            //{
-            //    foreach (char c in dividedCipher[i])
-            //    {
-            //        Console.Write(c + " ");
-            //    }
-            //    Console.WriteLine();
-            //    Console.WriteLine();
-            //}
+            DivideCipher(cipherWord, possibleLength);
+
+            StringBuilder answerkey = ChiSquareTest();
+
+            Console.WriteLine("Based on the key length of " + possibleLength + ", I found the key as " + answerkey);
+            Console.WriteLine();
+            Console.WriteLine();
+
+            //=================================Finally Decrypt Cipher text=========================================
+
+            //print out the ORIGINAL TEXT
+            Console.WriteLine("Based on the Key " + answerkey + " my decrypt result is    ");
+
+            Console.WriteLine();
+            Console.WriteLine();
 
 
-
-
-            ChiSquareTest();
-
-
+            Console.WriteLine(DecryptingText(answerkey.ToString(), cipherWord));
 
 
         }
+
+        public static StringBuilder DecryptingText(string key, string cipher)
+        {
+            StringBuilder decryptedText = new StringBuilder();
+
+            char keyChar = ' ';
+
+            char cipherChar = ' ';
+
+            int appliedAscii = 0;
+            
+            for (int i=0; i< cipher.Length; i++)
+            {
+                keyChar = key[i % key.Length];
+
+                cipherChar = cipher[i];
+
+                int gap = cipherChar - keyChar;
+
+                appliedAscii = (int)cipherChar - ((int)keyChar - 65);
+
+                if (appliedAscii< 65)
+                {
+                    appliedAscii += 26;
+                }
+
+                decryptedText.Append((char)appliedAscii);
+            }
+
+
+            return decryptedText;
+        
+        }
+
 
         public static void DivideCipher(string cipherWord, int keyLength)
         {
@@ -133,20 +182,15 @@ namespace Security
             }
         }
 
-        public static void ChiSquareTest()
+        public static StringBuilder ChiSquareTest()
         {
-
-            double frequencySum = 0;
+            StringBuilder answerKey = new StringBuilder();
 
             int ascii = 0;
 
             int convertedAscii = 0;
 
             char convertedChar = ' ';
-
-            char observedCount = ' ';
-
-            int colLength = 0;
 
             double expectedCount = 0;
 
@@ -165,21 +209,14 @@ namespace Security
                         //convert character to ascii
                         ascii = (int)dividedCipher[i][j];
                         //apply the convert number
-                        //Console.Write("previous alphabet = " + dividedCipher[i][j] + " ASCII code is " + ascii + " applied converted = " );
-                        convertedAscii = ascii + k;
-                        //Console.WriteLine(convertedAscii);
-                        //if ascii is over the range
-                        if (convertedAscii> 90)
+                        convertedAscii = ascii - k;
+                        //if ascii is under the ascii range
+                        if (convertedAscii < 65)
                         {
-                            convertedAscii -= 26;
+                            convertedAscii += 26;
                         }
-                        
                             convertedChar = (char)convertedAscii;
                         
-                        //Console.WriteLine(" converted alphabet = " + convertedChar + " converted  ASCII code is " + convertedAscii);
-
-                        //Console.WriteLine("==========================================================");
-
                         if (!_chiSquare.ContainsKey(convertedChar))
                         {
                             _chiSquare.Add(convertedChar, 1);
@@ -197,16 +234,10 @@ namespace Security
                     foreach (var kvp in _chiSquare)
                     {
                         expectedCount = frequency[kvp.Key.ToString()] * _chiSquare.Sum(x => x.Value);
-                        Console.WriteLine(kvp.Key + "     " + kvp.Value + "      " + _chiSquare.Sum(x => x.Value) + "   frequency = " + frequency[kvp.Key.ToString()]);
-                        //Console.WriteLine("expectred Count = " + expectedCount + " xSquare is " + Math.Pow(kvp.Value - expectedCount, 2) / expectedCount);
 
                         xSquare += Math.Pow(kvp.Value - expectedCount,2) / expectedCount;
-                        //Console.WriteLine(xSquare);
                     }
-
-                    Console.WriteLine("Alphabet = " + (char)(k + 65)+ " Final xSquare calculated value =  " + xSquare);
-                    Console.WriteLine("=========================================");
-
+                 
                     temp.Add((char)(k + 65), xSquare);
 
                     //reset
@@ -217,18 +248,15 @@ namespace Security
                 }//applying alphabets are done.
                  //at this point, _chiSquare contains the number of characters.
 
-                var sortedDict = from entry in temp orderby entry.Value ascending select entry;
+                //get minimum xSquare's key which is single char.
+                var keyR = temp.MinBy(kvp => kvp.Value).Key;
 
-                foreach (var kvp in sortedDict)
-                {
-                    Console.WriteLine(kvp.Key + "     " + kvp.Value);
-                }
-                Console.WriteLine("============================================================================");
+                answerKey.Append(keyR);
 
                 temp.Clear();
-
-
             }
+
+            return answerKey;
         }
 
         public static void Kasiski(string cipher)
